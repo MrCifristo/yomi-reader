@@ -1,6 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { PdfPage } from './PdfPage';
 
+vi.mock('pdfjs-dist', () => ({
+  GlobalWorkerOptions: { workerSrc: '' },
+  TextLayer: class { render() { return Promise.resolve(); } cancel() {} },
+}));
+
 function mockDoc() {
   const viewport = { width: 600, height: 800, scale: 1 };
   return {

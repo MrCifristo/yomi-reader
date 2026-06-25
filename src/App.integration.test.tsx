@@ -6,6 +6,7 @@ import { hashDocument } from './core/hash';
 vi.mock('pdfjs-dist', () => ({
   GlobalWorkerOptions: { workerSrc: '' },
   OPS: { paintImageXObject: 85, paintJpegXObject: 86 },
+  TextLayer: class { render() { return Promise.resolve(); } cancel() {} },
   getDocument: () => ({ promise: Promise.resolve({
     numPages: 3,
     getOutline: async () => null,

@@ -12,3 +12,32 @@ body { margin: 0; background: var(--navy-oscuro); color: var(--crema); font-fami
 .pdf-viewer { flex: 1; overflow: auto; padding: 16px; }
 .gb-btn { border: 2px solid var(--crema); background: transparent; color: var(--crema); font-family: inherit; font-size: .7rem; padding: 5px 9px; border-radius: 4px; text-transform: uppercase; cursor: pointer; }
 .gb-btn.active { background: var(--mostaza); color: var(--navy); border-color: var(--mostaza); }
+
+/* pdf.js text layer — positioned absolutely over the canvas so text is selectable */
+.pdf-page { position: relative; }
+.pdf-page .textLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  /* width/height are set inline by PdfPage.tsx to match the viewport */
+  line-height: 1;
+  /* Make text invisible but selectable; pdf.js spans carry their own transforms */
+  opacity: 0.2;
+  /* Ensure the layer is above the canvas */
+  z-index: 1;
+}
+/* pdf.js v6 text spans use absolute positioning + CSS transforms */
+.pdf-page .textLayer span,
+.pdf-page .textLayer br {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+/* Highlight selected text */
+.pdf-page .textLayer ::selection {
+  background: rgba(0, 0, 255, 0.3);
+  color: transparent;
+}
