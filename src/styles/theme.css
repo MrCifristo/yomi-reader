@@ -1,0 +1,14 @@
+:root {
+  --crema: #e7d8b8; --mostaza: #d9a441; --oxido: #b5533b;
+  --teal: #3f7d7a; --navy: #1f2933; --navy-oscuro: #161d24;
+  --font-retro: "DM Mono", ui-monospace, "Courier New", monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--navy-oscuro); color: var(--crema); font-family: var(--font-retro); }
+.app { display: flex; flex-direction: column; height: 100vh; }
+.topbar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--navy); border-bottom: 2px solid var(--teal); }
+.brand { font-weight: 700; letter-spacing: .05em; color: var(--mostaza); }
+.sidebar { width: 210px; background: var(--navy); border-right: 2px solid var(--teal); padding: 10px; overflow: auto; }
+.pdf-viewer { flex: 1; overflow: auto; padding: 16px; }
+.gb-btn { border: 2px solid var(--crema); background: transparent; color: var(--crema); font-family: inherit; font-size: .7rem; padding: 5px 9px; border-radius: 4px; text-transform: uppercase; cursor: pointer; }
+.gb-btn.active { background: var(--mostaza); color: var(--navy); border-color: var(--mostaza); }

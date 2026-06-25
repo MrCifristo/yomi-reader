@@ -21,7 +21,7 @@ export function PdfPage({ doc, pageNumber, scale, onRendered }: Props) {
       canvas.width = viewport.width;
       canvas.height = viewport.height;
       const ctx = canvas.getContext('2d');
-      if (ctx) await page.render({ canvasContext: ctx, viewport }).promise;
+      if (ctx) await page.render({ canvas, canvasContext: ctx, viewport }).promise;
       if (!cancelled) onRendered?.(pageNumber, { width: viewport.width, height: viewport.height });
     })();
     return () => { cancelled = true; };

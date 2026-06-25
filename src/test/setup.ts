@@ -9,4 +9,6 @@ if (!globalThis.crypto) (globalThis as any).crypto = webcrypto;
 // Override it unconditionally with a quiet stub so PDF-rendering components can
 // run in tests without noise. The render path is exercised against mocked
 // pdfjs, which ignores the returned context.
-HTMLCanvasElement.prototype.getContext = vi.fn(() => null) as never;
+if (typeof HTMLCanvasElement !== 'undefined') {
+  HTMLCanvasElement.prototype.getContext = vi.fn(() => null) as never;
+}
