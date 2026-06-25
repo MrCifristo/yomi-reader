@@ -6,9 +6,10 @@ import { Sidebar } from './ui/Sidebar';
 import { useHighlights } from './ui/useHighlights';
 import { HighlightLayer } from './ui/HighlightLayer';
 import { useSelectionHighlight } from './ui/useSelectionHighlight';
+import { Footer } from './ui/Footer';
 import { buildPageFilter } from './theme/filters';
 import { readEmbeddedOutline, collectFontStats, autoDetectChapters } from './pdf/outline';
-import { mergeChapters } from './core/chapters';
+import { mergeChapters, nextChapterPage, prevChapterPage } from './core/chapters';
 import { exportRecord, importRecord } from './core/transfer';
 import { getDocument, patchDocument, newDocumentRecord } from './core/storage';
 import { defaultSettings } from './core/hash';
@@ -20,6 +21,7 @@ export default function App() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [highlightMode, setHighlightMode] = useState(false);
+  const [saving, setSaving] = useState(false);
   const { highlights, addHighlight, removeHighlight, resetHighlights } = useHighlights([]);
   const loadedHashRef = useRef<string | null>(null);
   // Track rendered page sizes keyed by page number (state to trigger re-render for overlay)
@@ -64,11 +66,14 @@ export default function App() {
   // Autosave on any change.
   useEffect(() => {
     if (!hash || !meta || loadedHashRef.current !== hash) return;
+    setSaving(true);
     patchDocument(hash, {
       meta: { ...meta, ultimaPagina: currentPage },
       chapters, highlights, settings,
     }).catch((e) => {
       console.warn('[autosave] patchDocument failed:', e);
+    }).finally(() => {
+      setSaving(false);
     });
   }, [hash, meta, currentPage, chapters, highlights, settings]);
 
@@ -84,6 +89,16 @@ export default function App() {
       [...prev.filter((c) => c.origen === 'manual'), { id: crypto.randomUUID(), titulo, pagina: currentPage, nivel: 0, origen: 'manual' }],
     ));
   }, [currentPage]);
+
+  const onNextChapter = useCallback(() => {
+    const page = nextChapterPage(chapters, currentPage);
+    if (page !== null) setCurrentPage(page);
+  }, [chapters, currentPage]);
+
+  const onPrevChapter = useCallback(() => {
+    const page = prevChapterPage(chapters, currentPage);
+    if (page !== null) setCurrentPage(page);
+  }, [chapters, currentPage]);
 
   const onExport = useCallback(async () => {
     if (!hash) return;
@@ -172,6 +187,14 @@ export default function App() {
           )}
         </div>
       </div>
+      <Footer
+        chapters={chapters}
+        currentPage={currentPage}
+        totalPages={meta?.totalPaginas ?? 0}
+        saving={saving}
+        onPrevChapter={onPrevChapter}
+        onNextChapter={onNextChapter}
+      />
     </div>
   );
 }

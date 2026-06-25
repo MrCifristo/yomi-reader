@@ -18,3 +18,16 @@ export function chapterForPage(chapters: Chapter[], page: number): Chapter | und
   }
   return current;
 }
+
+export function nextChapterPage(chapters: Chapter[], current: number): number | null {
+  const found = chapters.find((c) => c.pagina > current);
+  return found ? found.pagina : null;
+}
+
+export function prevChapterPage(chapters: Chapter[], current: number): number | null {
+  let prev: Chapter | undefined;
+  for (const c of chapters) {
+    if (c.pagina < current) prev = c; else break;
+  }
+  return prev ? prev.pagina : null;
+}
