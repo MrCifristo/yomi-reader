@@ -7,6 +7,7 @@ interface Props {
   totalPages: number;
   currentPage: number;
   scale: number;
+  darkText?: boolean;
   onPageChange: (page: number) => void;
   onPageRendered?: (pageNumber: number, size: { width: number; height: number }) => void;
   renderPageOverlay?: (pageNumber: number) => ReactNode;
@@ -14,7 +15,7 @@ interface Props {
 
 const WINDOW = 2;
 
-export function PdfViewer({ doc, totalPages, currentPage, scale, onPageRendered, renderPageOverlay }: Props) {
+export function PdfViewer({ doc, totalPages, currentPage, scale, darkText, onPageRendered, renderPageOverlay }: Props) {
   const start = Math.max(1, currentPage - WINDOW);
   const end = Math.min(totalPages, currentPage + WINDOW);
   const pages: number[] = [];
@@ -28,6 +29,7 @@ export function PdfViewer({ doc, totalPages, currentPage, scale, onPageRendered,
           doc={doc}
           pageNumber={p}
           scale={scale}
+          darkText={darkText}
           onRendered={onPageRendered}
           overlay={renderPageOverlay?.(p)}
         />

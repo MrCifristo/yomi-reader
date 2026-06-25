@@ -3,6 +3,11 @@ import { PdfPage } from './PdfPage';
 
 vi.mock('pdfjs-dist', () => ({
   GlobalWorkerOptions: { workerSrc: '' },
+  OPS: {
+    paintImageXObject: 85,
+    paintInlineImageXObject: 92,
+    paintImageMaskXObject: 83,
+  },
   TextLayer: class { render() { return Promise.resolve(); } cancel() {} },
 }));
 
@@ -13,6 +18,7 @@ function mockDoc() {
       getViewport: () => viewport,
       render: () => ({ promise: Promise.resolve() }),
       getTextContent: () => Promise.resolve({ items: [] }),
+      getOperatorList: () => Promise.resolve({ fnArray: [], argsArray: [] }),
     }),
   } as any;
 }
@@ -20,6 +26,13 @@ function mockDoc() {
 test('renders a canvas and reports dimensions', async () => {
   const onRendered = vi.fn();
   render(<PdfPage doc={mockDoc()} pageNumber={1} scale={1} onRendered={onRendered} />);
+  await waitFor(() => expect(screen.getByTestId('pdf-canvas')).toBeInTheDocument());
+  await waitFor(() => expect(onRendered).toHaveBeenCalledWith(1, { width: 600, height: 800 }));
+});
+
+test('renders with darkText prop without crashing', async () => {
+  const onRendered = vi.fn();
+  render(<PdfPage doc={mockDoc()} pageNumber={1} scale={1} darkText onRendered={onRendered} />);
   await waitFor(() => expect(screen.getByTestId('pdf-canvas')).toBeInTheDocument());
   await waitFor(() => expect(onRendered).toHaveBeenCalledWith(1, { width: 600, height: 800 }));
 });

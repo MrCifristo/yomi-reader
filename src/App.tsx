@@ -99,7 +99,10 @@ export default function App() {
     }
   }, [hash]);
 
+  // In 'texto' mode dark inversion happens on the canvas (PdfPage), not via CSS.
+  // In 'escaneado' mode the stage-level CSS filter handles full inversion + sliders.
   const filter = buildPageFilter(settings);
+  const darkText = settings.modo === 'texto';
 
   const onPageRendered = useCallback((pageNumber: number, size: { width: number; height: number }) => {
     pageSizesRef.current.set(pageNumber, size);
@@ -157,6 +160,7 @@ export default function App() {
             <PdfViewer
               doc={doc} totalPages={meta.totalPaginas} currentPage={currentPage}
               scale={1.3} onPageChange={setCurrentPage}
+              darkText={darkText}
               onPageRendered={onPageRendered}
               renderPageOverlay={renderPageOverlay}
             />

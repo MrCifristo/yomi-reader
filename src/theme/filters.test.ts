@@ -1,8 +1,8 @@
 import { buildPageFilter } from './filters';
 import { defaultSettings } from '../core/hash';
 
-test('texto mode is plain invert + hue-rotate', () => {
-  expect(buildPageFilter({ ...defaultSettings(), modo: 'texto' })).toBe('invert(1) hue-rotate(180deg)');
+test('texto mode returns none (canvas inversion handles dark mode)', () => {
+  expect(buildPageFilter({ ...defaultSettings(), modo: 'texto' })).toBe('none');
 });
 
 test('escaneado mode appends contrast/brightness/sepia from sliders', () => {
