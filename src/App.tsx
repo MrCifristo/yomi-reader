@@ -38,7 +38,7 @@ export default function App() {
         setChapters(embedded);
         setCurrentPage(1);
       }
-    })();
+    })().catch((e) => console.error('[load-or-create] failed:', e));
   }, [doc, hash, meta]);
 
   // Autosave on any change.
@@ -47,6 +47,8 @@ export default function App() {
     patchDocument(hash, {
       meta: { ...meta, ultimaPagina: currentPage },
       chapters, highlights, settings,
+    }).catch((e) => {
+      console.warn('[autosave] patchDocument failed:', e);
     });
   }, [hash, meta, currentPage, chapters, highlights, settings]);
 

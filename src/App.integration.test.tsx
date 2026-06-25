@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 import { getDocument } from './core/storage';
+import { hashDocument } from './core/hash';
 
 vi.mock('pdfjs-dist', () => ({
   GlobalWorkerOptions: { workerSrc: '' },
@@ -26,11 +27,10 @@ test('opening a PDF persists a document record by hash', async () => {
   const input = container.querySelector('input[type=file][accept="application/pdf"]') as HTMLInputElement;
   fireEvent.change(input, { target: { files: [pdfFile()] } });
   await waitFor(() => expect(screen.getByText('tesis.pdf')).toBeInTheDocument());
-  // a record now exists in IndexedDB
+  // a record now exists in IndexedDB — verify via the storage layer
+  const expectedHash = await hashDocument(new TextEncoder().encode('bytes').buffer);
   await waitFor(async () => {
-    // hash of 'bytes' is deterministic; just assert some record was written
-    const idb = indexedDB.open('yomi-reader');
-    await new Promise((r) => { idb.onsuccess = r; });
+    expect(await getDocument(expectedHash)).toBeTruthy();
   });
 });
 
