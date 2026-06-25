@@ -12,6 +12,38 @@ test('auto-detects headings as blocks 1.4x median font size', () => {
   expect(out[0]).toMatchObject({ titulo: 'CAPÍTULO 1', pagina: 1, origen: 'auto' });
 });
 
+test('ranks heading sizes into title/subtitle levels', () => {
+  const stats = [
+    { page: 1, text: 'cuerpo de texto', fontSize: 10 },
+    { page: 1, text: 'CAPÍTULO 1', fontSize: 20 }, // largest → nivel 0
+    { page: 1, text: '1.1 Antecedentes', fontSize: 14 }, // next → nivel 1
+    { page: 2, text: 'cuerpo de texto', fontSize: 10 },
+    { page: 2, text: 'CAPÍTULO 2', fontSize: 20 },
+    { page: 2, text: '2.1 Método', fontSize: 14 },
+  ];
+  const out = autoDetectChapters(stats);
+  expect(out.map((c) => [c.titulo, c.nivel])).toEqual([
+    ['CAPÍTULO 1', 0],
+    ['1.1 Antecedentes', 1],
+    ['CAPÍTULO 2', 0],
+    ['2.1 Método', 1],
+  ]);
+});
+
+test('drops running heads repeated across many pages', () => {
+  const stats = [
+    // Body text dominates (as in a real document) → body size = 10.
+    ...Array.from({ length: 12 }, (_, i) => ({ page: (i % 4) + 1, text: 'cuerpo', fontSize: 10 })),
+    { page: 1, text: 'Encabezado corriente', fontSize: 16 },
+    { page: 2, text: 'Encabezado corriente', fontSize: 16 },
+    { page: 3, text: 'Encabezado corriente', fontSize: 16 },
+    { page: 4, text: 'Encabezado corriente', fontSize: 16 }, // 4 pages → running head, dropped
+    { page: 2, text: 'Sección real', fontSize: 16 },
+  ];
+  const out = autoDetectChapters(stats);
+  expect(out.map((c) => c.titulo)).toEqual(['Sección real']);
+});
+
 test('collectFontStats returns one stat per non-empty text item with correct fontSize', async () => {
   const mockDoc = {
     numPages: 2,

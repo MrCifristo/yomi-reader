@@ -9,7 +9,7 @@ import { useSelectionHighlight } from './ui/useSelectionHighlight';
 import { Footer } from './ui/Footer';
 import { buildPageFilter } from './theme/filters';
 import { readEmbeddedOutline, collectFontStats, autoDetectChapters } from './pdf/outline';
-import { mergeChapters, nextChapterPage, prevChapterPage } from './core/chapters';
+import { mergeChapters } from './core/chapters';
 import { exportRecord, importRecord } from './core/transfer';
 import { getDocument, patchDocument, newDocumentRecord } from './core/storage';
 import { defaultSettings } from './core/hash';
@@ -89,16 +89,6 @@ export default function App() {
       [...prev.filter((c) => c.origen === 'manual'), { id: crypto.randomUUID(), titulo, pagina: currentPage, nivel: 0, origen: 'manual' }],
     ));
   }, [currentPage]);
-
-  const onNextChapter = useCallback(() => {
-    const page = nextChapterPage(chapters, currentPage);
-    if (page !== null) setCurrentPage(page);
-  }, [chapters, currentPage]);
-
-  const onPrevChapter = useCallback(() => {
-    const page = prevChapterPage(chapters, currentPage);
-    if (page !== null) setCurrentPage(page);
-  }, [chapters, currentPage]);
 
   const onExport = useCallback(async () => {
     if (!hash) return;
@@ -181,8 +171,12 @@ export default function App() {
           chapters={chapters} highlights={highlights} currentPage={currentPage}
           onJump={setCurrentPage} onAddChapter={onAddChapter}
         />
-        <div className="pdf-stage" style={{ flex: 1, overflow: 'auto', filter }} onMouseUp={handleStageMouseUp}>
-          {meta && <div className="doc-title" style={{ padding: '4px 12px' }}>{meta.titulo}</div>}
+        <div
+          className="pdf-stage"
+          style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', filter }}
+          onMouseUp={handleStageMouseUp}
+        >
+          {meta && <div className="doc-title" style={{ padding: '4px 12px', flexShrink: 0 }}>{meta.titulo}</div>}
           {doc && meta && (
             <PdfViewer
               doc={doc} totalPages={meta.totalPaginas} currentPage={currentPage}
@@ -195,12 +189,9 @@ export default function App() {
         </div>
       </div>
       <Footer
-        chapters={chapters}
         currentPage={currentPage}
         totalPages={meta?.totalPaginas ?? 0}
         saving={saving}
-        onPrevChapter={onPrevChapter}
-        onNextChapter={onNextChapter}
       />
     </div>
   );
