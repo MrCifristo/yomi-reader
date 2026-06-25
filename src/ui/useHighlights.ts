@@ -14,5 +14,9 @@ export function useHighlights(initial: Highlight[]) {
     setHighlights((prev) => prev.filter((h) => h.id !== id));
   }, []);
 
-  return { highlights, addHighlight, removeHighlight };
+  const resetHighlights = useCallback((newHighlights: Highlight[]) => {
+    setHighlights(newHighlights);
+  }, []);
+
+  return { highlights, addHighlight, removeHighlight, resetHighlights };
 }

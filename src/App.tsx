@@ -20,7 +20,8 @@ export default function App() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [highlightMode, setHighlightMode] = useState(false);
-  const { highlights, addHighlight, removeHighlight } = useHighlights([]);
+  const { highlights, addHighlight, removeHighlight, resetHighlights } = useHighlights([]);
+  const loadedHashRef = useRef<string | null>(null);
   // Track rendered page sizes keyed by page number (state to trigger re-render for overlay)
   const [pageSizes, setPageSizes] = useState<Map<number, { width: number; height: number }>>(new Map());
   const pageSizesRef = useRef<Map<number, { width: number; height: number }>>(new Map());
@@ -40,6 +41,8 @@ export default function App() {
         setSettings(existing.settings);
         setChapters(mergeChapters(embedded, [], existing.chapters.filter((c) => c.origen === 'manual')));
         setCurrentPage(existing.meta.ultimaPagina);
+        resetHighlights(existing.highlights);
+        loadedHashRef.current = hash;
       } else {
         const rec = newDocumentRecord(hash, meta);
         rec.chapters = embedded;
@@ -47,13 +50,15 @@ export default function App() {
         setSettings(rec.settings);
         setChapters(embedded);
         setCurrentPage(1);
+        resetHighlights([]);
+        loadedHashRef.current = hash;
       }
     })().catch((e) => console.error('[load-or-create] failed:', e));
-  }, [doc, hash, meta]);
+  }, [doc, hash, meta, resetHighlights]);
 
   // Autosave on any change.
   useEffect(() => {
-    if (!hash || !meta) return;
+    if (!hash || !meta || loadedHashRef.current !== hash) return;
     patchDocument(hash, {
       meta: { ...meta, ultimaPagina: currentPage },
       chapters, highlights, settings,
