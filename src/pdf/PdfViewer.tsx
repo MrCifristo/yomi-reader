@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { PdfPage } from './PdfPage';
 
@@ -7,11 +8,13 @@ interface Props {
   currentPage: number;
   scale: number;
   onPageChange: (page: number) => void;
+  onPageRendered?: (pageNumber: number, size: { width: number; height: number }) => void;
+  renderPageOverlay?: (pageNumber: number) => ReactNode;
 }
 
 const WINDOW = 2;
 
-export function PdfViewer({ doc, totalPages, currentPage, scale }: Props) {
+export function PdfViewer({ doc, totalPages, currentPage, scale, onPageRendered, renderPageOverlay }: Props) {
   const start = Math.max(1, currentPage - WINDOW);
   const end = Math.min(totalPages, currentPage + WINDOW);
   const pages: number[] = [];
@@ -20,7 +23,14 @@ export function PdfViewer({ doc, totalPages, currentPage, scale }: Props) {
   return (
     <div className="pdf-viewer">
       {pages.map((p) => (
-        <PdfPage key={p} doc={doc} pageNumber={p} scale={scale} />
+        <PdfPage
+          key={p}
+          doc={doc}
+          pageNumber={p}
+          scale={scale}
+          onRendered={onPageRendered}
+          overlay={renderPageOverlay?.(p)}
+        />
       ))}
     </div>
   );

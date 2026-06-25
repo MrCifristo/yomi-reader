@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 
 interface Props {
@@ -6,9 +7,10 @@ interface Props {
   pageNumber: number;
   scale: number;
   onRendered?: (pageNumber: number, size: { width: number; height: number }) => void;
+  overlay?: ReactNode;
 }
 
-export function PdfPage({ doc, pageNumber, scale, onRendered }: Props) {
+export function PdfPage({ doc, pageNumber, scale, onRendered, overlay }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -28,9 +30,10 @@ export function PdfPage({ doc, pageNumber, scale, onRendered }: Props) {
   }, [doc, pageNumber, scale, onRendered]);
 
   return (
-    <div className="pdf-page" data-page={pageNumber}>
+    <div className="pdf-page" data-page={pageNumber} style={{ position: 'relative' }}>
       <canvas ref={canvasRef} data-testid="pdf-canvas" />
       <div className="textLayer" />
+      {overlay}
     </div>
   );
 }

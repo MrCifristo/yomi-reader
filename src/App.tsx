@@ -1,9 +1,11 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { usePdfDocument } from './pdf/usePdfDocument';
 import { PdfViewer } from './pdf/PdfViewer';
 import { Toolbar } from './ui/Toolbar';
 import { Sidebar } from './ui/Sidebar';
 import { useHighlights } from './ui/useHighlights';
+import { HighlightLayer } from './ui/HighlightLayer';
+import { useSelectionHighlight } from './ui/useSelectionHighlight';
 import { buildPageFilter } from './theme/filters';
 import { readEmbeddedOutline } from './pdf/outline';
 import { mergeChapters } from './core/chapters';
@@ -18,7 +20,15 @@ export default function App() {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [highlightMode, setHighlightMode] = useState(false);
-  const { highlights, addHighlight: _addHighlight, removeHighlight: _removeHighlight } = useHighlights([]);
+  const { highlights, addHighlight, removeHighlight } = useHighlights([]);
+  // Track rendered page sizes keyed by page number (state to trigger re-render for overlay)
+  const [pageSizes, setPageSizes] = useState<Map<number, { width: number; height: number }>>(new Map());
+  const pageSizesRef = useRef<Map<number, { width: number; height: number }>>(new Map());
+  const { captureSelection } = useSelectionHighlight({
+    enabled: highlightMode,
+    color: '#d9a441',
+    onCreate: addHighlight,
+  });
 
   // Load or create record when a doc opens.
   useEffect(() => {
@@ -86,6 +96,42 @@ export default function App() {
 
   const filter = buildPageFilter(settings);
 
+  const onPageRendered = useCallback((pageNumber: number, size: { width: number; height: number }) => {
+    pageSizesRef.current.set(pageNumber, size);
+    setPageSizes(new Map(pageSizesRef.current));
+  }, []);
+
+  const handleStageMouseUp = useCallback(() => {
+    if (!highlightMode) return;
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const anchorNode = sel.anchorNode;
+    if (!anchorNode) return;
+    const el = anchorNode.nodeType === Node.ELEMENT_NODE ? (anchorNode as Element) : anchorNode.parentElement;
+    const pageEl = el?.closest<HTMLElement>('.pdf-page[data-page]');
+    if (!pageEl) return;
+    const pageNumber = Number(pageEl.dataset.page);
+    const size = pageSizesRef.current.get(pageNumber);
+    const canvas = pageEl.querySelector('canvas');
+    const pageW = size?.width ?? canvas?.width ?? pageEl.offsetWidth;
+    const pageH = size?.height ?? canvas?.height ?? pageEl.offsetHeight;
+    captureSelection(pageEl, pageNumber, pageW, pageH);
+  }, [highlightMode, captureSelection]);
+
+  const renderPageOverlay = useMemo(() => (pageNumber: number) => {
+    const size = pageSizes.get(pageNumber);
+    if (!size) return null;
+    return (
+      <HighlightLayer
+        highlights={highlights}
+        pagina={pageNumber}
+        pageW={size.width}
+        pageH={size.height}
+        onRemove={removeHighlight}
+      />
+    );
+  }, [pageSizes, highlights, removeHighlight]);
+
   return (
     <div className="app">
       <Toolbar
@@ -100,12 +146,14 @@ export default function App() {
           chapters={chapters} highlights={highlights} currentPage={currentPage}
           onJump={setCurrentPage} onAddChapter={onAddChapter}
         />
-        <div className="pdf-stage" style={{ flex: 1, overflow: 'auto', filter }}>
+        <div className="pdf-stage" style={{ flex: 1, overflow: 'auto', filter }} onMouseUp={handleStageMouseUp}>
           {meta && <div className="doc-title" style={{ padding: '4px 12px' }}>{meta.titulo}</div>}
           {doc && meta && (
             <PdfViewer
               doc={doc} totalPages={meta.totalPaginas} currentPage={currentPage}
               scale={1.3} onPageChange={setCurrentPage}
+              onPageRendered={onPageRendered}
+              renderPageOverlay={renderPageOverlay}
             />
           )}
         </div>
