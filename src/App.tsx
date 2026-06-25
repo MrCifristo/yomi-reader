@@ -7,7 +7,7 @@ import { useHighlights } from './ui/useHighlights';
 import { HighlightLayer } from './ui/HighlightLayer';
 import { useSelectionHighlight } from './ui/useSelectionHighlight';
 import { buildPageFilter } from './theme/filters';
-import { readEmbeddedOutline } from './pdf/outline';
+import { readEmbeddedOutline, collectFontStats, autoDetectChapters } from './pdf/outline';
 import { mergeChapters } from './core/chapters';
 import { exportRecord, importRecord } from './core/transfer';
 import { getDocument, patchDocument, newDocumentRecord } from './core/storage';
@@ -37,18 +37,23 @@ export default function App() {
     (async () => {
       const existing = await getDocument(hash);
       const embedded = await readEmbeddedOutline(doc);
+      // Only run auto-detection when there is no embedded outline —
+      // it iterates up to 30 pages and calls getTextContent per page.
+      const auto = embedded.length === 0
+        ? autoDetectChapters(await collectFontStats(doc))
+        : [];
       if (existing) {
         setSettings(existing.settings);
-        setChapters(mergeChapters(embedded, [], existing.chapters.filter((c) => c.origen === 'manual')));
+        setChapters(mergeChapters(embedded, auto, existing.chapters.filter((c) => c.origen === 'manual')));
         setCurrentPage(existing.meta.ultimaPagina);
         resetHighlights(existing.highlights);
         loadedHashRef.current = hash;
       } else {
         const rec = newDocumentRecord(hash, meta);
-        rec.chapters = embedded;
+        rec.chapters = mergeChapters(embedded, auto, []);
         await patchDocument(hash, rec);
         setSettings(rec.settings);
-        setChapters(embedded);
+        setChapters(rec.chapters);
         setCurrentPage(1);
         resetHighlights([]);
         loadedHashRef.current = hash;
