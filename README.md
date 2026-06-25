@@ -16,11 +16,11 @@ pnpm build      # production build → static files in dist/
 ## Features
 
 - **100% local** — PDFs never leave your browser. No server, no upload.
-- **Dark mode (Modo texto B)** — inverts text pages while preserving color figures using CSS `mix-blend-mode`.
+- **Dark mode (Modo texto B)** — inverts each page on the canvas, then restores the original colors of figures/images (located by tracking pdf.js image operators), so text reads light-on-dark while color figures stay intact.
 - **Scanned mode (Escaneado A+C)** — contrast, brightness, and temperature sliders for scanned-document PDFs.
 - **Smart index** — built from the PDF's embedded outline; falls back to auto-detection of heading pages; supports manual chapter entries pinned to any page.
 - **Persistent highlighter** — select text to highlight in multiple colors; highlights survive page reloads via IndexedDB. Export/import annotations as `*.notas.json`.
-- **Retro aesthetic** — Bebop Dusk palette: warm amber, teal, dark grays. Pokémon-style pixel fonts for headings, monospace body.
+- **Retro aesthetic** — Bebop Dusk palette (warm amber, teal, dark grays) with a Game-Boy-style boxy UI and monospace typography for a cozy, nostalgic feel.
 
 ## Interactive Smoke Test (manual)
 
