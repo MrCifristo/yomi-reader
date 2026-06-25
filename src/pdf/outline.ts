@@ -36,3 +36,34 @@ export async function readEmbeddedOutline(doc: PDFDocumentProxy): Promise<Chapte
   await walk(outline, 0);
   return chapters;
 }
+
+/**
+ * Collect per-text-item font-size stats for auto chapter detection.
+ *
+ * Iterates pages 1..min(doc.numPages, maxPages) (default 30 — enough to
+ * find chapter headings near the front of most documents; capped to keep
+ * performance acceptable on large PDFs).
+ *
+ * FontSize is derived from the pdf.js text item's `transform` array as
+ * Math.hypot(transform[2], transform[3]), which equals the font height for
+ * unrotated text (transform[3]) and gracefully handles slight rotations.
+ * Empty strings are skipped.
+ */
+export async function collectFontStats(
+  doc: PDFDocumentProxy,
+  maxPages = 30,
+): Promise<FontStat[]> {
+  const limit = Math.min(doc.numPages, maxPages);
+  const stats: FontStat[] = [];
+  for (let p = 1; p <= limit; p++) {
+    const page = await doc.getPage(p);
+    const content = await page.getTextContent();
+    for (const item of content.items as any[]) {
+      if (!item.str || item.str.trim() === '') continue;
+      const t = item.transform as number[];
+      const fontSize = Math.hypot(t[2], t[3]);
+      stats.push({ page: p, text: item.str, fontSize });
+    }
+  }
+  return stats;
+}
