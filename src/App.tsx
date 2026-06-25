@@ -110,14 +110,20 @@ export default function App() {
     a.click();
   }, [hash, meta]);
 
+  const [importNotice, setImportNotice] = useState<string | null>(null);
+
   const onImport = useCallback(async (file: File) => {
     const rec = importRecord(await file.text());
     await patchDocument(rec.hash, rec);
     if (rec.hash === hash) {
       setSettings(rec.settings); setChapters(rec.chapters);
       setCurrentPage(rec.meta.ultimaPagina);
+      resetHighlights(rec.highlights);
+      setImportNotice(null);
+    } else {
+      setImportNotice('Notas importadas para otro documento (hash distinto).');
     }
-  }, [hash]);
+  }, [hash, resetHighlights]);
 
   // In 'texto' mode dark inversion happens on the canvas (PdfPage), not via CSS.
   // In 'escaneado' mode the stage-level CSS filter handles full inversion + sliders.
@@ -169,6 +175,7 @@ export default function App() {
         onSliderChange={onSliderChange} onExport={onExport} onImport={onImport}
       />
       {error && <div className="error-banner">{error}</div>}
+      {importNotice && <div className="error-banner">{importNotice}</div>}
       <div className="body" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         <Sidebar
           chapters={chapters} highlights={highlights} currentPage={currentPage}
